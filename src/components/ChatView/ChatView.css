@@ -1,0 +1,79 @@
+.chat-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100svh; /* Высота на весь экран */
+}
+
+.chat-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px; /* Фиксированная высота для заголовка */
+  padding: 0 10px;
+  color: white;
+  border-bottom: 1px solid #ddd;
+}
+
+.chat-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.back-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1; /* Чтобы кнопка была выше текста */
+}
+
+.chat-input {
+  flex-shrink: 0; /* Форма фиксированной высоты */
+  border-top: 1px solid #ddd;
+  padding: 10px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto; /* Прокрутка переписки */
+  padding: 10px;
+}
+
+/* Стили для scrollbar */
+.chat-messages::-webkit-scrollbar {
+  width: 8px; /* Ширина полосы прокрутки */
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f5f5f5; /* Цвет фона трека */
+  border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #444c5c; /* Цвет бегунка */
+  border-radius: 4px;
+}
+
+.note-wrapper {
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  display: flex;
+  justify-content: left;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+}
+
+.note-bar {
+  height: 100%;
+  width: 4px;
+  border-radius: 25px;
+  background: #091e64;
+}
+.note-text {
+  color: white;
+  font-size: 14px;
+}

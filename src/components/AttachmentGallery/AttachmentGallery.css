@@ -1,0 +1,48 @@
+.attachment-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachment {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  max-height: calc(100% - 60px);
+  border-radius: 8px;
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 80%;
+  margin-top: 10px;
+}
+
+.attachment-info button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.attachment-info button:hover {
+  background-color: #0056b3;
+}
+
+.attachment-info button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.attachment-info span {
+  font-size: 16px;
+  color: #fff;
+}
