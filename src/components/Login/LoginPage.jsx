@@ -26,8 +26,8 @@ const LoginPage = ({ setIsLoggedIn }) => {
   };
 
   const handleInstagramLogin = () => {
-    const instagramClientId = process.env.REACT_APP_CLIENT_ID;
-    const redirectUri = process.env.REACT_APP_REDIRECT_URI;
+    const instagramClientId = "961474909176131";
+    const redirectUri = "https://www.melek-crm.kz/api/auth/callback";
     const scopes =
       "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments";
 

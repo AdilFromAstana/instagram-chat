@@ -108,6 +108,8 @@ export const refreshAccessToken = async () => {
 export const logout = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("instagramToken");
+  window.location.reload()
 };
 
 export const updateClientFolder = async (clientId, folder) => {
