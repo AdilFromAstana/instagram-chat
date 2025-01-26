@@ -24,13 +24,13 @@ const ChatView = memo(({ client, onBack, folders, setClients }) => {
       return prevClients.map((client_) => {
         return client_.instagram_id === client.instagram_id
           ? {
-              ...client_,
-              lastMessage: {
-                ...client_.lastMessage,
-                isRead: true,
-                readAt: Date.now(),
-              },
-            }
+            ...client_,
+            lastMessage: {
+              ...client_.lastMessage,
+              isRead: true,
+              readAt: Date.now(),
+            },
+          }
           : client_;
       });
     });
@@ -47,7 +47,7 @@ const ChatView = memo(({ client, onBack, folders, setClients }) => {
       client,
       onClose: () => setIsDrawerOpen(false),
       folders,
-      submitTag: () => {}, // Функция-заглушка
+      submitTag: () => { }, // Функция-заглушка
     }),
     [isDrawerOpen, client, folders]
   );
@@ -92,7 +92,11 @@ const ChatView = memo(({ client, onBack, folders, setClients }) => {
         chatRoomId={client.instagram_id}
       />
 
-      <MessageInput client={client} />
+      <MessageInput
+        client={client}
+        setMessages={setMessages}
+        messages={messages}
+      />
       <Drawer {...drawerProps} />
     </div>
   );

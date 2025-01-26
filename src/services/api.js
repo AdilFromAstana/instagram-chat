@@ -33,8 +33,8 @@ export const fetchDialogueMessages = async (
     params: {
       senderId,
       recipientId,
-      lastMessageId, // Передаем ID самого старого сообщения
-      limit, // Указываем количество сообщений на страницу
+      lastMessageId,
+      limit,
     },
   });
 

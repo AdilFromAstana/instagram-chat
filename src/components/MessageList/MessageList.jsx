@@ -10,7 +10,7 @@ import "./MessageList.css";
 import { useMessageScroll } from "../../hooks/useMessageScroll";
 import MessageItem from "../MessageItem/MessageItem";
 import Modal from "../Modal/Modal";
-import socket, { joinRoom } from "../../services/socketClient";
+import socket from "../../services/socketClient";
 
 const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
   const { listRef, handleScroll, isLoading, skipScrollHandling } =
@@ -25,22 +25,22 @@ const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
   const openModal = useCallback((attachments) => {
     setModalContent(attachments);
     setIsModalOpen(true);
-    document.body.style.overflow = "hidden"; // Запрещаем прокрутку страницы
+    document.body.style.overflow = "hidden";
   }, []);
 
   const closeModal = useCallback(() => {
     setModalContent(null);
     setIsModalOpen(false);
-    document.body.style.overflow = ""; // Разрешаем прокрутку страницы
+    document.body.style.overflow = "";
   }, []);
 
   const scrollToBottom = () => {
     if (listRef.current) {
       listRef.current.scrollTo({
         top: listRef.current.scrollHeight,
-        behavior: "smooth", // Добавляем плавную анимацию
+        behavior: "smooth",
       });
-      setShowNewMessageNotification(false); // Скрываем уведомление
+      setShowNewMessageNotification(false);
     }
   };
 
@@ -55,7 +55,6 @@ const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
           const isMessageExists = prevMessages.some(
             (message) => message.mid === newMessage.mid
           );
-          console.log("isMessageExists: ", isMessageExists)
           if (isMessageExists) {
             return prevMessages.map((message) => {
               message.isRead = true;

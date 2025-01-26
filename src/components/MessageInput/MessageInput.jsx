@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import "./MessageInput.css";
 import { sendMessage } from "../../services/api";
 
-const MessageInput = ({ client }) => {
+const MessageInput = ({
+  client,
+  setMessages,
+  messages
+}) => {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
@@ -52,11 +56,27 @@ const MessageInput = ({ client }) => {
         formData.append("attachment", file);
       }
 
-      console.log("Отправляемое сообщение:", message);
-      console.log("client.instagram_id: ", client.instagram_id);
+      const response = await sendMessage(formData);
+      const now = new Date();
+      const isoDate = now.toISOString();
 
-      await sendMessage(formData);
+      const createdMessage = {
+        isUnsupported: false,
+        isDeleted: false,
+        isRead: true,
+        content: message,
+        _id: response.result.message_id,
+        mid: response.result.message_id,
+        senderId: "17841470770780990",
+        sender_id: "17841470770780990",
+        recipient_id: response.result.recipient_id,
+        recipientId: response.result.recipient_id,
+        createdAt: isoDate
+      };
 
+      setMessages((prevMessages) => {
+        return [...prevMessages, createdMessage];
+      })
       setMessage("");
       setFile(null);
       setShowModal(false);
@@ -84,9 +104,9 @@ const MessageInput = ({ client }) => {
     if (error) {
       const timer = setTimeout(() => {
         setError(null);
-      }, 5000); // Сообщение об ошибке исчезает через 5 секунд
+      }, 5000);
 
-      return () => clearTimeout(timer); // Очистка таймера при размонтировании
+      return () => clearTimeout(timer);
     }
   }, [error]);
 
