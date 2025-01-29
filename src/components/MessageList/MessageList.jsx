@@ -33,9 +33,9 @@ const MessageList = memo(({ messages, myId, chatRoomId }) => {
     if (listRef.current) {
       listRef.current.scrollTo({
         top: listRef.current.scrollHeight,
-        behavior: "smooth", // Добавляем плавную анимацию
+        behavior: "smooth",
       });
-      setShowNewMessageNotification(false); // Скрываем уведомление
+      setShowNewMessageNotification(false);
     }
   };
 
