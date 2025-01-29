@@ -1,45 +1,53 @@
-import React, { useState, useEffect, memo, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import MessageList from "../MessageList/MessageList";
 import MessageInput from "../MessageInput/MessageInput";
 import { fetchDialogueMessages } from "../../services/api";
-import "./ChatView.css";
 import Drawer from "../Drawer/Drawer";
+import ChatHeader from "../ChatHeader/ChatHeader";
+import "./ChatView.css";
 
-const ChatView = memo(({ client, onBack, folders, setClients }) => {
-  const [messages, setMessages] = useState(() => []);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(() => false);
+const ChatView = React.memo(({ client, onBack, folders }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const myId = "17841470770780990";
+  const queryClient = useQueryClient();
 
-  const loadMessages = useCallback(async () => {
-    try {
-      const data = await fetchDialogueMessages(myId, client.instagram_id);
-      setMessages(data);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
-  }, [myId, client.instagram_id]);
+  const {
+    data: messages = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["messages", client.instagram_id], // Кешируем сообщения по ID клиента
+    queryFn: () => fetchDialogueMessages(myId, client.instagram_id),
+    staleTime: 60 * 1000, // Держим сообщения свежими 1 минуту
+    cacheTime: 5 * 60 * 1000, // Кешируем сообщения на 5 минут
+  });
 
-  const markMessagesAsRead = useCallback(() => {
-    setClients((prevClients) => {
-      return prevClients.map((client_) => {
-        return client_.instagram_id === client.instagram_id
-          ? {
-              ...client_,
-              lastMessage: {
-                ...client_.lastMessage,
-                isRead: true,
-                readAt: Date.now(),
-              },
-            }
-          : client_;
+  const markMessagesAsRead = useMutation({
+    mutationFn: async () => {
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["clients"], (oldClients) => {
+        return oldClients?.map((client_) =>
+          client_.instagram_id === client.instagram_id
+            ? {
+                ...client_,
+                lastMessage: {
+                  ...client_.lastMessage,
+                  isRead: true,
+                  readAt: Date.now(),
+                },
+              }
+            : client_
+        );
       });
-    });
-  }, [setClients, client.instagram_id]);
+    },
+  });
 
-  useEffect(() => {
-    markMessagesAsRead();
-    loadMessages();
-  }, [markMessagesAsRead, loadMessages]);
+  React.useEffect(() => {
+    markMessagesAsRead.mutate();
+  }, [client.instagram_id]);
 
   const drawerProps = useMemo(
     () => ({
@@ -47,46 +55,26 @@ const ChatView = memo(({ client, onBack, folders, setClients }) => {
       client,
       onClose: () => setIsDrawerOpen(false),
       folders,
-      submitTag: () => {}, // Функция-заглушка
     }),
     [isDrawerOpen, client, folders]
   );
 
   return (
     <div className="chat-view">
-      <div className="chat-header">
-        <button onClick={onBack} className="back-button">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="white"
-            height="24"
-            width="24"
-            viewBox="0 0 476.213 476.213"
-          >
-            <polygon points="476.213,223.107 57.427,223.107 151.82,128.713 130.607,107.5 0,238.106 130.607,368.714 151.82,347.5   57.427,253.107 476.213,253.107 " />
-          </svg>
-        </button>
-        <h2>{client.name || client.instagram_id}</h2>
-        <button className="drawer-button" onClick={() => setIsDrawerOpen(true)}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="24"
-            viewBox="0 0 24 24"
-            width="24"
-            fill="white"
-          >
-            <path d="M4 6h16M4 12h16m-7 6h7" stroke="white" strokeWidth="2" />
-          </svg>
-        </button>
-      </div>
+      <ChatHeader
+        onBack={onBack}
+        client={client}
+        setIsDrawerOpen={setIsDrawerOpen}
+      />
+
       {client.note && (
         <div className="note-wrapper">
           <div className="note-bar"></div>
           <div className="note-text">{client.note}</div>
         </div>
       )}
+
       <MessageList
-        setMessages={setMessages}
         messages={messages}
         myId={myId}
         chatRoomId={client.instagram_id}

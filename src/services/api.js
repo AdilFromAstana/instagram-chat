@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://www.melek-crm.kz/api";
+// const API_BASE_URL = "https://www.melek-crm.kz/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -109,7 +110,7 @@ export const logout = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("instagramToken");
-  window.location.reload()
+  window.location.reload();
 };
 
 export const updateClientFolder = async (clientId, folder) => {
@@ -148,8 +149,8 @@ export const updateClientNote = async (clientId, note) => {
   }
 };
 
-export const fetchClients = async () => {
-  const response = await apiClient.get(`/clients`);
+export const fetchClients = async ({ folder }) => {
+  const response = await apiClient.get(`/clients/folder/${folder}`);
   return response.data.clients;
 };
 

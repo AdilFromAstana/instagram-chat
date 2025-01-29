@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ChatList from "./components/ChatList/ChatList";
 import ChatView from "./components/ChatView/ChatView";
 import { fetchClients, fetchFolders } from "./services/api";
@@ -6,71 +7,63 @@ import "./App.css";
 import socket from "./services/socketClient";
 import LoginPage from "./components/Login/LoginPage";
 
+const fetchClientsByFolder = async (folder) => {
+  return await fetchClients({ folder });
+};
+
 const App = () => {
+  console.log("RENDER APP");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [clients, setClients] = useState([]);
   const [folders, setFolders] = useState([{ code: "new" }]);
   const [selectedFolder, setSelectedFolder] = useState(folders[0].code);
   const [isUnreadOnly, setIsUnreadOnly] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const instagramToken = localStorage.getItem("instagramToken");
 
+  const {
+    data: clients = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["clients", selectedFolder],
+    queryFn: () => fetchClientsByFolder(selectedFolder),
+    staleTime: 60 * 1000,
+    cacheTime: 5 * 60 * 1000,
+  });
+
   useEffect(() => {
-    if (isLoggedIn) {
-      const loadData = async () => {
-        try {
-          const [foldersData, clientsData] = await Promise.all([
-            fetchFolders(),
-            fetchClients(),
-          ]);
-          setFolders(foldersData);
-          setClients(clientsData);
-        } catch (error) {
-          console.error("Error loading data:", error);
-        }
-      };
+    if (!isLoggedIn) return;
 
-      loadData();
+    console.log("Fetching folders...");
 
-      const handleClientUpdate = (updatedClient) => {
-        setClients((clients) =>
-          clients.map((client) => {
-            if (client.instagram_id === updatedClient.instagram_id) {
-              if (selectedClient?.instagram_id === updatedClient.instagram_id) {
-                setSelectedClient({
-                  ...client,
-                  lastMessage: updatedClient.lastMessage,
-                  tag: updatedClient.tag,
-                  note: updatedClient.note,
-                  folder: updatedClient.folder,
-                  isDeleted: updatedClient.isDeleted,
-                });
-              }
-              return {
-                ...client,
-                lastMessage: updatedClient.lastMessage,
-                tag: updatedClient.tag ?? client.tag,
-                note: updatedClient.note ?? client.note,
-                folder: updatedClient.folder ?? client.folder,
-                isDeleted: updatedClient.isDeleted ?? client.folder,
-              };
-            }
-            return client;
-          })
-        );
-      };
+    fetchFolders()
+      .then(setFolders)
+      .catch((error) => console.error("Error loading folders:", error));
+  }, [isLoggedIn]);
 
-      socket.on("clientUpdate", handleClientUpdate);
+  useEffect(() => {
+    if (!isLoggedIn) return;
 
-      return () => {
-        socket.off("clientUpdate", handleClientUpdate);
-      };
+    const handleClientUpdate = (updatedClient) => {
+      setSelectedClient((prev) =>
+        prev?.instagram_id === updatedClient.instagram_id
+          ? { ...prev, ...updatedClient }
+          : prev
+      );
+    };
+
+    socket.on("clientUpdate", handleClientUpdate);
+
+    return () => {
+      socket.off("clientUpdate", handleClientUpdate);
+    };
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (instagramToken && !isLoggedIn) {
+      setIsLoggedIn(true);
     }
-  }, [isLoggedIn, selectedClient]);
-
-  useEffect(() => {
-    setIsLoggedIn(instagramToken);
-  }, [instagramToken]);
+  }, [instagramToken, isLoggedIn]);
 
   if (!isLoggedIn) {
     return <LoginPage setIsLoggedIn={setIsLoggedIn} />;
@@ -80,7 +73,6 @@ const App = () => {
     <div className="app-container">
       {selectedClient ? (
         <ChatView
-          setClients={setClients}
           folders={folders}
           client={selectedClient}
           onBack={() => setSelectedClient(null)}
@@ -92,8 +84,10 @@ const App = () => {
           setSelectedFolder={setSelectedFolder}
           selectedFolder={selectedFolder}
           clients={clients}
-          onSelectClient={setSelectedClient}
           folders={folders}
+          isLoading={isLoading}
+          isError={isError}
+          onSelectClient={setSelectedClient}
         />
       )}
     </div>

@@ -1,20 +1,15 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  memo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useMemo, memo, useRef } from "react";
 import "./MessageList.css";
 import { useMessageScroll } from "../../hooks/useMessageScroll";
 import MessageItem from "../MessageItem/MessageItem";
 import Modal from "../Modal/Modal";
-import socket, { joinRoom } from "../../services/socketClient";
 
-const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
-  const { listRef, handleScroll, isLoading, skipScrollHandling } =
-    useMessageScroll(messages, setMessages, chatRoomId, myId);
+const MessageList = memo(({ messages, myId, chatRoomId }) => {
+  const { listRef, handleScroll, isLoading } = useMessageScroll(
+    messages,
+    chatRoomId,
+    myId
+  );
   const messageListRef = useRef();
 
   const [modalContent, setModalContent] = useState(null);
@@ -22,17 +17,17 @@ const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
   const [showNewMessageNotification, setShowNewMessageNotification] =
     useState(false);
 
-  const openModal = useCallback((attachments) => {
+  const openModal = (attachments) => {
     setModalContent(attachments);
     setIsModalOpen(true);
     document.body.style.overflow = "hidden"; // Запрещаем прокрутку страницы
-  }, []);
+  };
 
-  const closeModal = useCallback(() => {
+  const closeModal = () => {
     setModalContent(null);
     setIsModalOpen(false);
     document.body.style.overflow = ""; // Разрешаем прокрутку страницы
-  }, []);
+  };
 
   const scrollToBottom = () => {
     if (listRef.current) {
@@ -43,53 +38,6 @@ const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
       setShowNewMessageNotification(false); // Скрываем уведомление
     }
   };
-
-  useEffect(() => {
-    socket.emit("joinRoom", chatRoomId);
-    const handleNewMessage = (newMessage) => {
-      if (newMessage.recipient_id === chatRoomId || newMessage.sender_id === chatRoomId) {
-
-        skipScrollHandling.current = true;
-
-        setMessages((prevMessages) => {
-          const isMessageExists = prevMessages.some(
-            (message) => message.mid === newMessage.mid
-          );
-          console.log("isMessageExists: ", isMessageExists)
-          if (isMessageExists) {
-            return prevMessages.map((message) => {
-              message.isRead = true;
-              message.readAt = Date.now();
-              if (message.mid === newMessage.mid) {
-                return { ...message, isDeleted: newMessage.isDeleted };
-              }
-              return message;
-            });
-          }
-          return [...prevMessages, newMessage];
-        });
-
-        if (
-          listRef.current &&
-          listRef.current.scrollTop + listRef.current.clientHeight <
-          listRef.current.scrollHeight - 10
-        ) {
-          setShowNewMessageNotification(true);
-        } else {
-          scrollToBottom();
-        }
-
-        skipScrollHandling.current = false;
-      }
-    };
-
-    socket.on("newMessage", handleNewMessage);
-
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.emit("leaveRoom", chatRoomId);
-    };
-  }, [setMessages, listRef]);
 
   const renderedMessages = useMemo(() => {
     return messages.map((message, index) => {
@@ -104,7 +52,7 @@ const MessageList = memo(({ messages, setMessages, myId, chatRoomId }) => {
         />
       );
     });
-  }, [messages, myId, openModal]);
+  }, [messages, myId]);
 
   return (
     <div className="chat-messages" ref={listRef} onScroll={handleScroll}>
