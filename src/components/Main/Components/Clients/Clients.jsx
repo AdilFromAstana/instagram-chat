@@ -3,6 +3,7 @@ import EditClientsBottomSheet from "../EditClientsBottomSheet/EditClientsBottomS
 import { useClientScroll } from "../../../../hooks/useClientScroll";
 import { formatTime } from "../../../../services/formatTime";
 import { updateClientsFolder } from "../../../../services/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Clients = memo(
   ({
@@ -14,6 +15,7 @@ const Clients = memo(
     selectedFolder,
     isClientsLoading,
     filteredClients,
+    scrollPositionRef
   }) => {
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
     const [selectedClients, setSelectedClients] = useState([]);
@@ -21,16 +23,25 @@ const Clients = memo(
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const cleintsListRef = useRef();
+    const queryClient = useQueryClient();
     const { listRef, handleScroll, isLoading } = useClientScroll({
       clients,
       selectedFolder,
     });
 
-    console.log("cleintsListRef: ", cleintsListRef);
-    console.log("listRef: ", listRef);
+    useEffect(() => {
+      if (listRef.current) {
+        listRef.current.scrollTop = scrollPositionRef.current; // ✅ Восстанавливаем скролл
+      }
+    }, []); // Выполнится при монтировании компонента
 
     const onClientSelect = (client) => {
       isSelectionMode ? toggleSelectClient(client) : handleSelectClient(client);
+    };
+
+    const handleScrollWithSave = (event) => {
+      scrollPositionRef.current = event.target.scrollTop; // ✅ Запоминаем текущий скролл
+      handleScroll(event); // ✅ Вызываем оригинальный обработчик скролла
     };
 
     const toggleSelectClient = useCallback((client) => {
@@ -56,7 +67,10 @@ const Clients = memo(
         setSelectedClients([]);
         setIsSelectionMode(false);
         setIsBottomSheetOpen(false);
+
+        queryClient.invalidateQueries(["clients", selectedFolder]);
       } catch (e) {
+        console.error(e)
         setErrorMessage("Произошла ошибка при сохранении изменений.");
       } finally {
       }
@@ -75,7 +89,7 @@ const Clients = memo(
 
     return (
       <>
-        <div className="chat-list" ref={listRef} onScroll={handleScroll}>
+        <div className="chat-list" ref={listRef} onScroll={handleScrollWithSave}>
           {isClientsLoading ? (
             <div className="loading-overlay">
               <div className="spinner"></div>
@@ -153,9 +167,8 @@ const Clients = memo(
             <span>{selectedClients.length} выбрано</span>
             <div style={{ display: "flex", gap: "10px" }}>
               <button
-                className={`selection-footer-button ${
-                  selectedClients.length === 0 && "disabled"
-                }`}
+                className={`selection-footer-button ${selectedClients.length === 0 && "disabled"
+                  }`}
                 onClick={() =>
                   selectedClients.length > 0 && handleMoveClients()
                 }

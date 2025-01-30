@@ -4,7 +4,7 @@ import Modal from "../Modal/Modal";
 import { useMessageScroll } from "../../../../hooks/useMessageScroll";
 import "./MessageList.css";
 
-const MessageList = memo(({ messages, myId, chatRoomId }) => {
+const MessageList = memo(({ messages, myId, chatRoomId, isFirstMessagesLoading }) => {
   const { listRef, handleScroll, isLoading } = useMessageScroll({
     messages,
     chatRoomId,
@@ -58,6 +58,11 @@ const MessageList = memo(({ messages, myId, chatRoomId }) => {
     <div className="chat-messages" ref={listRef} onScroll={handleScroll}>
       {isLoading && (
         <div className="loading-indicator">
+          <div className="spinner"></div>
+        </div>
+      )}
+      {isFirstMessagesLoading && (
+        <div className="loading-overlay">
           <div className="spinner"></div>
         </div>
       )}

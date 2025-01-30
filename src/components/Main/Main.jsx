@@ -17,6 +17,7 @@ const Main = memo(
     isFoldersLoading,
     isClientsError,
     isClientsLoading,
+    scrollPositionRef
   }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -61,6 +62,7 @@ const Main = memo(
           selectedFolder={selectedFolder}
           isClientsLoading={isClientsLoading}
           filteredClients={filteredClients}
+          scrollPositionRef={scrollPositionRef}
         />
       </div>
     );

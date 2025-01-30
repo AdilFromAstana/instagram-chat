@@ -1,18 +1,21 @@
 .message-input-form {
   display: flex;
-  align-items: center;
+  align-items: end;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9;
 }
 
-.message-input-form input {
-  flex: 1;
-  padding: 10px;
+.message-input-form textarea {
+  flex: 1 1;
+  padding: 5px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 5px;
   margin-right: 8px;
+  max-height: 150px;
+  resize: none;
 }
 
 .message-input-form input:disabled {
@@ -133,6 +136,7 @@
   from {
     width: 100%;
   }
+
   to {
     width: 0;
   }
