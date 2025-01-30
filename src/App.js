@@ -18,7 +18,7 @@ const App = () => {
   const [isUnreadOnly, setIsUnreadOnly] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const instagramToken = localStorage.getItem("instagramToken");
-  const scrollPositionRef = useRef({});
+  const scrollPositionRef = useRef(0);
 
   const {
     data: clients = [],
