@@ -1,15 +1,15 @@
 import React, { useState, useMemo, memo, useRef } from "react";
-import "./MessageList.css";
-import { useMessageScroll } from "../../hooks/useMessageScroll";
 import MessageItem from "../MessageItem/MessageItem";
 import Modal from "../Modal/Modal";
+import { useMessageScroll } from "../../../../hooks/useMessageScroll";
+import "./MessageList.css";
 
 const MessageList = memo(({ messages, myId, chatRoomId }) => {
-  const { listRef, handleScroll, isLoading } = useMessageScroll(
+  const { listRef, handleScroll, isLoading } = useMessageScroll({
     messages,
     chatRoomId,
-    myId
-  );
+    myId,
+  });
   const messageListRef = useRef();
 
   const [modalContent, setModalContent] = useState(null);
@@ -20,13 +20,13 @@ const MessageList = memo(({ messages, myId, chatRoomId }) => {
   const openModal = (attachments) => {
     setModalContent(attachments);
     setIsModalOpen(true);
-    document.body.style.overflow = "hidden"; // Запрещаем прокрутку страницы
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setModalContent(null);
     setIsModalOpen(false);
-    document.body.style.overflow = ""; // Разрешаем прокрутку страницы
+    document.body.style.overflow = "";
   };
 
   const scrollToBottom = () => {

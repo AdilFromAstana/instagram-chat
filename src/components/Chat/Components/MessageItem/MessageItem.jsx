@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { formatTime } from "../../services/formatTime";
+import { formatTime } from "../../../../services/formatTime";
 
 const MessageItem = ({ message, previousMessage, myId, openModal }) => {
   const [isImageError, setIsImageError] = useState(false);

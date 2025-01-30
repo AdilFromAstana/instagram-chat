@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./MessageInput.css";
-import { sendMessage } from "../../services/api";
+import { sendMessage } from "../../../../services/api";
 
 const MessageInput = ({
   client,

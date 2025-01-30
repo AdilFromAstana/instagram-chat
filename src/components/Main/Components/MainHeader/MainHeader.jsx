@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { logout } from "../../services/api";
+import { logout } from "../../../../services/api";
 
 const UnreadMessageIcon = memo(({ isUnreadOnly }) => {
   return (
@@ -71,8 +71,15 @@ const LogoutIcon = () => {
   );
 };
 
-const ChatListHeader = memo(
-  ({ setSearchTerm, searchTerm, setIsUnreadOnly, isUnreadOnly }) => {
+const MainHeader = memo(
+  ({
+    setSearchTerm,
+    searchTerm,
+    setIsUnreadOnly,
+    isUnreadOnly,
+    setIsSelectionMode,
+    isSelectionMode,
+  }) => {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     return (
@@ -80,17 +87,46 @@ const ChatListHeader = memo(
         {!isSearchOpen ? (
           <div className="header">
             <span className="title">Melek CRM</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
               <button
                 className="search-button"
-                onClick={() => setIsUnreadOnly((value) => !value)}
+                onClick={() =>
+                  !isSelectionMode && setIsUnreadOnly((value) => !value)
+                }
+                style={{ opacity: isSelectionMode ? 0.5 : 1 }}
                 title="Непрочитанные сообщения"
               >
                 <UnreadMessageIcon isUnreadOnly={isUnreadOnly} />
               </button>
               <button
                 className="search-button"
-                onClick={() => setIsSearchOpen(true)}
+                onClick={() => setIsSelectionMode(!isSelectionMode)}
+              >
+                <svg
+                  fill="none"
+                  height="24"
+                  stroke="white"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+              <button
+                style={{ opacity: isSelectionMode ? 0.5 : 1 }}
+                className="search-button"
+                onClick={() => !isSelectionMode && setIsSearchOpen(true)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +138,11 @@ const ChatListHeader = memo(
                   <path d="M10 2a8 8 0 105.293 14.707l5.5 5.5 1.414-1.414-5.5-5.5A8 8 0 0010 2zm0 2a6 6 0 110 12A6 6 0 0110 4z"></path>
                 </svg>
               </button>
-              <button className="search-button" onClick={logout}>
+              <button
+                style={{ opacity: isSelectionMode ? 0.5 : 1 }}
+                className="search-button"
+                onClick={() => !isSelectionMode && logout}
+              >
                 <LogoutIcon />
               </button>
             </div>
@@ -132,4 +172,4 @@ const ChatListHeader = memo(
   }
 );
 
-export default ChatListHeader;
+export default MainHeader;

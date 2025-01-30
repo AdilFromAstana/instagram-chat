@@ -2,7 +2,7 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchDialogueMessages } from "../services/api";
 
-export const useMessageScroll = (messages, chatRoomId, myId) => {
+export const useMessageScroll = ({ messages, chatRoomId, myId }) => {
   const queryClient = useQueryClient(); // Доступ к React Query кешу
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -11,16 +11,14 @@ export const useMessageScroll = (messages, chatRoomId, myId) => {
   const isFirstLoad = useRef(true); // Флаг для первой загрузки
   const skipScrollHandling = useRef(false); // Флаг для пропуска скролла
 
-  // ✅ Функция подгрузки старых сообщений
   const handleScroll = useCallback(async () => {
     if (!hasMore || isLoading || !listRef.current || skipScrollHandling.current)
       return;
 
-    prevScrollHeight.current = listRef.current.scrollHeight; // Сохраняем высоту перед изменением
+    prevScrollHeight.current = listRef.current.scrollHeight;
 
     if (listRef.current.scrollTop === 0) {
       setIsLoading(true);
-
       try {
         const olderMessages = await fetchDialogueMessages(
           chatRoomId,
@@ -44,7 +42,6 @@ export const useMessageScroll = (messages, chatRoomId, myId) => {
     }
   }, [hasMore, isLoading, chatRoomId, myId, messages, queryClient]);
 
-  // ✅ Автоскролл в самый низ при первой загрузке
   useEffect(() => {
     if (listRef.current && isFirstLoad.current && messages.length > 0) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -52,7 +49,6 @@ export const useMessageScroll = (messages, chatRoomId, myId) => {
     }
   }, [messages]);
 
-  // ✅ Корректировка скролла после загрузки новых сообщений
   useEffect(() => {
     if (listRef.current && !isLoading) {
       const current = listRef.current;

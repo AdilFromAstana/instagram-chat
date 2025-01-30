@@ -9,7 +9,7 @@ const Modal = ({ isOpen, content, onClose }) => {
 
   const handleDownload = () => {
     if (!content || content.length === 0) return;
-    const currentAttachment = content[0]; // Замените на активный элемент, если нужно
+    const currentAttachment = content[0];
     const link = document.createElement("a");
     link.href = currentAttachment.url;
     link.download = `attachment_${currentAttachment.type}_${Date.now()}`;

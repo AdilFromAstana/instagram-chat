@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import "./Drawer.css";
+import "./ChatDrawer.css";
 import {
   updateClientFolder,
   updateClientNote,
   updateClientTag,
-} from "../../services/api";
+} from "../../../../services/api";
 
-const Drawer = ({ isOpen, onClose, folders, client }) => {
+const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
   const [selectedFolder, setSelectedFolder] = useState(client.folder);
   const [tag, setTag] = useState(client.tag);
   const [note, setNote] = useState(client.note);
@@ -65,22 +65,22 @@ const Drawer = ({ isOpen, onClose, folders, client }) => {
       const timer = setTimeout(() => {
         setSuccessMessage("");
         setErrorMessage("");
-      }, 5000); // Сообщения исчезают через 5 секунд
+      }, 5000);
 
-      return () => clearTimeout(timer); // Очистка таймера при размонтировании
+      return () => clearTimeout(timer);
     }
   }, [successMessage, errorMessage]);
 
   return (
     <>
       <div
-        className={`drawer-overlay ${isOpen ? "open" : ""}`}
+        className={`chat-drawer-overlay ${isOpen ? "open" : ""}`}
         onClick={onClose}
       />
-      <div className={`drawer ${isOpen ? "open" : ""}`}>
-        <div className="drawer-header">
-          <h2 className="drawer-title">Manage Folders</h2>
-          <button className="drawer-close" onClick={onClose}>
+      <div className={`chat-drawer ${isOpen ? "open" : ""}`}>
+        <div className="chat-drawer-header">
+          <h2 className="chat-drawer-title">Карточка чата</h2>
+          <button className="chat-drawer-close" onClick={onClose}>
             ✕
           </button>
         </div>
@@ -159,4 +159,4 @@ const Drawer = ({ isOpen, onClose, folders, client }) => {
   );
 };
 
-export default Drawer;
+export default ChatDrawer;

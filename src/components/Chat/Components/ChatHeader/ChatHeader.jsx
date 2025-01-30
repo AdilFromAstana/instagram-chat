@@ -15,7 +15,13 @@ const ChatHeader = memo(({ onBack, client, setIsDrawerOpen }) => {
         </svg>
       </button>
       <h2>{client.name || client.instagram_id}</h2>
-      <button className="drawer-button" onClick={() => setIsDrawerOpen(true)}>
+      <button
+        className="chat-drawer-button"
+        onClick={() => {
+          document.body.style.overflow = "hidden";
+          setIsDrawerOpen(true);
+        }}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           height="24"

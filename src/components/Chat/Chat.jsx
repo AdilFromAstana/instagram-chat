@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import MessageList from "../MessageList/MessageList";
-import MessageInput from "../MessageInput/MessageInput";
+import MessageList from "./Components/MessageList/MessageList";
+import MessageInput from "./Components/MessageInput/MessageInput";
 import { fetchDialogueMessages } from "../../services/api";
-import Drawer from "../Drawer/Drawer";
-import ChatHeader from "../ChatHeader/ChatHeader";
-import "./ChatView.css";
+import ChatHeader from "./Components/ChatHeader/ChatHeader";
+import ChatDrawer from "./Components/ChatDrawer/ChatDrawer";
+import "./Chat.css";
 
-const ChatView = React.memo(({ client, onBack, folders }) => {
+const Chat = React.memo(({ client, onBack, folders }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const myId = "17841470770780990";
   const queryClient = useQueryClient();
@@ -17,10 +17,10 @@ const ChatView = React.memo(({ client, onBack, folders }) => {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["messages", client.instagram_id], // Кешируем сообщения по ID клиента
+    queryKey: ["messages", client.instagram_id],
     queryFn: () => fetchDialogueMessages(myId, client.instagram_id),
-    staleTime: 60 * 1000, // Держим сообщения свежими 1 минуту
-    cacheTime: 5 * 60 * 1000, // Кешируем сообщения на 5 минут
+    staleTime: 60 * 1000,
+    cacheTime: 5 * 60 * 1000,
   });
 
   const markMessagesAsRead = useMutation({
@@ -53,7 +53,10 @@ const ChatView = React.memo(({ client, onBack, folders }) => {
     () => ({
       isOpen: isDrawerOpen,
       client,
-      onClose: () => setIsDrawerOpen(false),
+      onClose: () => {
+        document.body.style.overflow = "";
+        setIsDrawerOpen(false);
+      },
       folders,
     }),
     [isDrawerOpen, client, folders]
@@ -81,9 +84,9 @@ const ChatView = React.memo(({ client, onBack, folders }) => {
       />
 
       <MessageInput client={client} />
-      <Drawer {...drawerProps} />
+      <ChatDrawer {...drawerProps} />
     </div>
   );
 });
 
-export default ChatView;
+export default Chat;

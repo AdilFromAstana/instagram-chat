@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const API_BASE_URL = "https://www.melek-crm.kz/api";
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "http://172.20.10.7:5000/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -40,6 +40,13 @@ export const fetchDialogueMessages = async (
   });
 
   return response.data.messages;
+};
+
+export const fetchClients = async ({ folder, lastClientId }) => {
+  const response = await apiClient.get(`/clients/folder/${folder}`, {
+    params: { lastClientId },
+  });
+  return response.data.clients;
 };
 
 export const sendMessage = async (formData) => {
@@ -121,7 +128,20 @@ export const updateClientFolder = async (clientId, folder) => {
     return response.data;
   } catch (error) {
     console.error("Error updating client folder:", error);
-    throw error; // Пробрасываем ошибку для обработки в вызывающем коде
+    throw error;
+  }
+};
+
+export const updateClientsFolder = async (clientIds, folder) => {
+  try {
+    const response = await apiClient.put(`/clients/folder`, {
+      clientIds,
+      folder,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating client folders:", error);
+    throw error;
   }
 };
 
@@ -147,11 +167,6 @@ export const updateClientNote = async (clientId, note) => {
     console.error("Error updating client folder:", error);
     throw error; // Пробрасываем ошибку для обработки в вызывающем коде
   }
-};
-
-export const fetchClients = async ({ folder }) => {
-  const response = await apiClient.get(`/clients/folder/${folder}`);
-  return response.data.clients;
 };
 
 export const fetchFolders = async () => {
