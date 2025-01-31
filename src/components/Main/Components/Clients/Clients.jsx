@@ -15,7 +15,7 @@ const Clients = memo(
     selectedFolder,
     isClientsLoading,
     filteredClients,
-    scrollPositionRef
+    scrollPositionRef,
   }) => {
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
     const [selectedClients, setSelectedClients] = useState([]);
@@ -69,8 +69,9 @@ const Clients = memo(
         setIsBottomSheetOpen(false);
 
         queryClient.invalidateQueries(["clients", selectedFolder]);
+        queryClient.invalidateQueries(["clients", updateFolder]);
       } catch (e) {
-        console.error(e)
+        console.error(e);
         setErrorMessage("Произошла ошибка при сохранении изменений.");
       } finally {
       }
@@ -89,7 +90,11 @@ const Clients = memo(
 
     return (
       <>
-        <div className="chat-list" ref={listRef} onScroll={handleScrollWithSave}>
+        <div
+          className="chat-list"
+          ref={listRef}
+          onScroll={handleScrollWithSave}
+        >
           {isClientsLoading ? (
             <div className="loading-overlay">
               <div className="spinner"></div>
@@ -167,8 +172,9 @@ const Clients = memo(
             <span>{selectedClients.length} выбрано</span>
             <div style={{ display: "flex", gap: "10px" }}>
               <button
-                className={`selection-footer-button ${selectedClients.length === 0 && "disabled"
-                  }`}
+                className={`selection-footer-button ${
+                  selectedClients.length === 0 && "disabled"
+                }`}
                 onClick={() =>
                   selectedClients.length > 0 && handleMoveClients()
                 }

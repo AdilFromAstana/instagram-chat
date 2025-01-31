@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import MessageList from "./Components/MessageList/MessageList";
 import MessageInput from "./Components/MessageInput/MessageInput";
@@ -11,6 +11,8 @@ const Chat = React.memo(({ client, onBack, folders }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const myId = "17841470770780990";
   const queryClient = useQueryClient();
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     data: messages = [],
@@ -32,13 +34,13 @@ const Chat = React.memo(({ client, onBack, folders }) => {
         return oldClients?.map((client_) =>
           client_.instagram_id === client.instagram_id
             ? {
-              ...client_,
-              lastMessage: {
-                ...client_.lastMessage,
-                isRead: true,
-                readAt: Date.now(),
-              },
-            }
+                ...client_,
+                lastMessage: {
+                  ...client_.lastMessage,
+                  isRead: true,
+                  readAt: Date.now(),
+                },
+              }
             : client_
         );
       });
@@ -47,6 +49,7 @@ const Chat = React.memo(({ client, onBack, folders }) => {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (newMessage) => {
+      console.log("newMessage: ", newMessage);
       return await sendMessage(newMessage);
     },
     onSuccess: (sentMessage) => {
@@ -63,11 +66,19 @@ const Chat = React.memo(({ client, onBack, folders }) => {
         sender_id: "17841470770780990",
         recipient_id: sentMessage.result.recipient_id,
         recipientId: sentMessage.result.recipient_id,
-        createdAt: isoDate
+        createdAt: isoDate,
       };
-      queryClient.setQueryData(["messages", client.instagram_id], (oldMessages = []) => {
-        return [...oldMessages, createdMessage];
-      });
+      queryClient.setQueryData(
+        ["messages", client.instagram_id],
+        (oldMessages = []) => {
+          return [...oldMessages, createdMessage];
+        }
+      );
+    },
+    onError: (error) => {
+      console.log("error: ", error);
+      setErrorMessage("Ошибка отправки сообщения!");
+      return;
     },
   });
 
@@ -88,6 +99,17 @@ const Chat = React.memo(({ client, onBack, folders }) => {
     [isDrawerOpen, client, folders]
   );
 
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   return (
     <div className="chat-view">
       <ChatHeader
@@ -95,6 +117,19 @@ const Chat = React.memo(({ client, onBack, folders }) => {
         client={client}
         setIsDrawerOpen={setIsDrawerOpen}
       />
+
+      {successMessage && (
+        <div className="success-message">
+          {successMessage}
+          <div className="success-bar" />
+        </div>
+      )}
+      {errorMessage && (
+        <div className="error-message">
+          {errorMessage}
+          <div className="error-bar" />
+        </div>
+      )}
 
       {client.note && (
         <div className="note-wrapper">
@@ -110,7 +145,10 @@ const Chat = React.memo(({ client, onBack, folders }) => {
         isFirstMessagesLoading={isLoading}
       />
 
-      <MessageInput client={client} sendMessage={sendMessageMutation.mutate} />
+      <MessageInput
+        client={client}
+        sendMessage={sendMessageMutation.mutateAsync}
+      />
       <ChatDrawer {...drawerProps} />
     </div>
   );

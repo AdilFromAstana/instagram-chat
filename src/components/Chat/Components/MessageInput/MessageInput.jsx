@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./MessageInput.css";
 
-const MessageInput = ({
-  client,
-  sendMessage
-}) => {
+const MessageInput = ({ client, sendMessage }) => {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
@@ -23,7 +20,9 @@ const MessageInput = ({
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight - 10}px`;
+      textareaRef.current.style.height = `${
+        textareaRef.current.scrollHeight - 10
+      }px`;
     }
   }, [message]);
 
@@ -55,7 +54,7 @@ const MessageInput = ({
     setShowModal(true);
   };
 
-  const handleSendMessage = (message) => {
+  const handleSendMessage = async (message) => {
     try {
       setIsSending(true);
       setError(null);
@@ -67,14 +66,19 @@ const MessageInput = ({
       if (file) {
         formData.append("attachment", file);
       }
-
-      sendMessage(formData);
+      await sendMessage(formData);
       setMessage("");
       setFile(null);
       setShowModal(false);
     } catch (err) {
-      console.error("Ошибка при отправке сообщения:", err);
-      setError("Не удалось отправить сообщение. Попробуйте снова.");
+      console.error(
+        "Ошибка при отправке сообщения:",
+        err?.response?.data?.error || error
+      );
+      setError(
+        err?.response?.data?.error ||
+          "Не удалось отправить сообщение. Попробуйте снова."
+      );
     } finally {
       setIsSending(false);
     }
@@ -128,7 +132,11 @@ const MessageInput = ({
           onChange={(e) => handleTextareaChange(e.target.value)}
           disabled={isSending}
         />
-        <button type="submit" disabled={isButtonDisabled} style={{ height: '38px', width: '36px', padding: 0 }}>
+        <button
+          type="submit"
+          disabled={isButtonDisabled}
+          style={{ height: "38px", width: "36px", padding: 0 }}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="26"
