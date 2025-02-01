@@ -1,8 +1,8 @@
 import axios from "axios";
 
-// const API_BASE_URL = "https://www.melek-crm.kz/api";
+const API_BASE_URL = "https://www.melek-crm.kz/api";
 // const API_BASE_URL = "http://192.168.0.12:5000/api";
-const API_BASE_URL = "http://172.20.10.7:5000/api";
+// const API_BASE_URL = "http://172.20.10.7:5000/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

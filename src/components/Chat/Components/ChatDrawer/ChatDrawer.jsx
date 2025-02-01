@@ -5,6 +5,7 @@ import {
   updateClientNote,
   updateClientTag,
 } from "../../../../services/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
   const [selectedFolder, setSelectedFolder] = useState(client.folder);
@@ -13,6 +14,7 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const queryClient = useQueryClient();
 
   const handleSubmitFolder = async (folderCode) => {
     if (folderCode !== selectedFolder) {
@@ -21,6 +23,7 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
 
       try {
         await updateClientFolder(client.instagram_id, folderCode);
+        queryClient.invalidateQueries(["clients", folderCode]);
         setSuccessMessage("Изменения успешно сохранены!");
       } catch (error) {
         setErrorMessage("Произошла ошибка при сохранении изменений.");
@@ -36,6 +39,7 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
     setIsSubmitting(true);
     try {
       await updateClientTag(client.instagram_id, tag);
+      queryClient.invalidateQueries(["clients", client.folder]);
       setSuccessMessage("Тег успешно изменен!");
     } catch (error) {
       setErrorMessage("Произошла ошибка при сохранении изменений.");
@@ -103,9 +107,8 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
           {folders.map((folder) => (
             <li
               key={folder.code}
-              className={`folder-item ${
-                folder.code === selectedFolder ? "selected" : ""
-              }`}
+              className={`folder-item ${folder.code === selectedFolder ? "selected" : ""
+                }`}
               disabled={folder.code === selectedFolder}
               onClick={() => handleSubmitFolder(folder.code)}
             >
@@ -149,7 +152,7 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
           <button
             onClick={handleSubmitNote}
             className="add-tag-button"
-            // disabled={note === client.note}
+          // disabled={note === client.note}
           >
             Добавить
           </button>
