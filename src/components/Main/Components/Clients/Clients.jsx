@@ -11,11 +11,7 @@ const Clients = memo(
     folders,
     onSelectClient,
     isSelectionMode,
-    clients,
     selectedFolder,
-    isClientsLoading,
-    filteredClients,
-    scrollPositionRef,
   }) => {
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
     const [selectedClients, setSelectedClients] = useState([]);
@@ -24,24 +20,16 @@ const Clients = memo(
     const [errorMessage, setErrorMessage] = useState("");
     const cleintsListRef = useRef();
     const queryClient = useQueryClient();
-    const { listRef, handleScroll, isLoading } = useClientScroll({
-      clients,
+    const { listRef, handleScroll, isFetchingNextPage, allClients } = useClientScroll({
       selectedFolder,
     });
-
-    useEffect(() => {
-      if (listRef.current) {
-        listRef.current.scrollTop = scrollPositionRef.current; // ✅ Восстанавливаем скролл
-      }
-    }, []); // Выполнится при монтировании компонента
 
     const onClientSelect = (client) => {
       isSelectionMode ? toggleSelectClient(client) : handleSelectClient(client);
     };
 
     const handleScrollWithSave = (event) => {
-      scrollPositionRef.current = event.target.scrollTop; // ✅ Запоминаем текущий скролл
-      handleScroll(event); // ✅ Вызываем оригинальный обработчик скролла
+      handleScroll(event);
     };
 
     const toggleSelectClient = useCallback((client) => {
@@ -95,15 +83,15 @@ const Clients = memo(
           ref={listRef}
           onScroll={handleScrollWithSave}
         >
-          {isClientsLoading ? (
-            <div className="loading-overlay">
-              <div className="spinner"></div>
-            </div>
-          ) : filteredClients.length === 0 ? (
+          {allClients.length === 0 ? (
             <div className="empty-list">Нет доступных чатов в этой папке.</div>
           ) : (
             <ul ref={cleintsListRef}>
-              {filteredClients.map((client) => (
+              {/* {isFetching && (
+                <div className="loading-overlay">
+                  <div className="spinner"></div>
+                </div>)} */}
+              {allClients.map((client) => (
                 <li
                   key={client.instagram_id}
                   className="chat-item"
@@ -145,7 +133,7 @@ const Clients = memo(
                   )}
                 </li>
               ))}
-              {isLoading && (
+              {isFetchingNextPage && (
                 <div className="loading-overlay">
                   <div className="spinner" style={{ margin: "10px" }}></div>
                 </div>
@@ -172,9 +160,8 @@ const Clients = memo(
             <span>{selectedClients.length} выбрано</span>
             <div style={{ display: "flex", gap: "10px" }}>
               <button
-                className={`selection-footer-button ${
-                  selectedClients.length === 0 && "disabled"
-                }`}
+                className={`selection-footer-button ${selectedClients.length === 0 && "disabled"
+                  }`}
                 onClick={() =>
                   selectedClients.length > 0 && handleMoveClients()
                 }

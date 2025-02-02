@@ -39,6 +39,7 @@ export const fetchDialogueMessages = async (
       limit,
     },
   });
+  console.log("response.data.messages:", response.data.messages);
 
   return response.data.messages;
 };
@@ -172,5 +173,6 @@ export const updateClientNote = async (clientId, note) => {
 
 export const fetchFolders = async () => {
   const response = await apiClient.get(`/folders`);
+  console.log("response.data.folders: ", response.data.folders)
   return response.data.folders;
 };

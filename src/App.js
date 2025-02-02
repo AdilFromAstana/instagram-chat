@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Main from "./components/Main/Main";
 import Chat from "./components/Chat/Chat";
 import LoginPage from "./components/Login/LoginPage";
@@ -12,27 +12,12 @@ const fetchClientsByFolder = async (folder) => {
 };
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [folders, setFolders] = useState([{ code: "new" }]);
-  const [selectedFolder, setSelectedFolder] = useState(folders[0].code);
-  const [isUnreadOnly, setIsUnreadOnly] = useState(false);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const instagramToken = localStorage.getItem("instagramToken");
-  const scrollPositionRef = useRef(0);
+  console.log("REDNER")
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("instagramToken"));
+  const queryClient = useQueryClient();
 
   const {
-    data: clients = [],
-    isLoading: isClientsLoading,
-    isError: isClientsError,
-  } = useQuery({
-    queryKey: ["clients", selectedFolder],
-    queryFn: () => fetchClientsByFolder(selectedFolder),
-    staleTime: 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
-  });
-
-  const {
-    data: fetchedFolders = [],
+    data: fetchedFolders = [{ code: "new" }],
     isLoading: isFoldersLoading,
     isError: isFoldersError,
   } = useQuery({
@@ -41,19 +26,42 @@ const App = () => {
     staleTime: 60 * 1000,
     cacheTime: 5 * 60 * 1000,
     enabled: isLoggedIn,
+    suspense: true,
   });
 
-  useEffect(() => {
-    if (fetchedFolders.length > 0) {
-      setFolders(fetchedFolders);
-    }
-  }, [fetchedFolders]);
+  const folders = fetchedFolders || [{ code: "new" }];
+
+  const [selectedFolder, setSelectedFolder] = useState(() =>
+    folders.length > 0 ? folders[0].code : "new"
+  );
+
+  const [isUnreadOnly, setIsUnreadOnly] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(() => null);
+
+  const handleSelectClient = useCallback((client) => {
+    setSelectedClient(client);
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     const handleClientUpdate = (updatedClient) => {
-      setSelectedClient((prev) =>
+      queryClient.setQueryData(["clients", selectedFolder], (oldClients) => {
+        console.log("oldClients: ", oldClients);
+        if (!oldClients || !oldClients.pages) return oldClients; // Если данных нет, возвращаем как есть
+        return {
+          ...oldClients, // Сохраняем остальные свойства (например, `pageParams`)
+          pages: oldClients.pages.map((page) =>
+            page.map((client_) =>
+              client_.instagram_id === updatedClient.instagram_id
+                ? { ...client_, lastMessage: updatedClient.lastMessage }
+                : client_
+            )
+          ),
+        };
+      });
+
+      handleSelectClient((prev) =>
         prev?.instagram_id === updatedClient.instagram_id
           ? { ...prev, ...updatedClient }
           : prev
@@ -67,12 +75,6 @@ const App = () => {
     };
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    if (instagramToken && !isLoggedIn) {
-      setIsLoggedIn(true);
-    }
-  }, [instagramToken, isLoggedIn]);
-
   if (!isLoggedIn) {
     return <LoginPage setIsLoggedIn={setIsLoggedIn} />;
   }
@@ -83,7 +85,7 @@ const App = () => {
         <Chat
           folders={folders}
           client={selectedClient}
-          onBack={() => setSelectedClient(null)}
+          setSelectedClient={handleSelectClient}
         />
       ) : (
         <Main
@@ -91,18 +93,14 @@ const App = () => {
           isUnreadOnly={isUnreadOnly}
           setSelectedFolder={setSelectedFolder}
           selectedFolder={selectedFolder}
-          clients={clients}
           folders={folders}
-          onSelectClient={setSelectedClient}
+          onSelectClient={handleSelectClient}
           isFoldersLoading={isFoldersLoading}
           isFoldersError={isFoldersError}
-          isClientsLoading={isClientsLoading}
-          isClientsError={isClientsError}
-          scrollPositionRef={scrollPositionRef}
         />
       )}
     </div>
   );
-};
+}
 
 export default App;

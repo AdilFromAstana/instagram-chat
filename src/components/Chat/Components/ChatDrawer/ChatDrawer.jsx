@@ -19,16 +19,22 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
   const handleSubmitFolder = async (folderCode) => {
     if (folderCode !== selectedFolder) {
       setIsSubmitting(true);
-      setSelectedFolder(folderCode);
 
       try {
         await updateClientFolder(client.instagram_id, folderCode);
+        setSelectedFolder(folderCode);
         queryClient.invalidateQueries(["clients", folderCode]);
+        queryClient.setQueryData(["clients", client.folder], (oldClients) => {
+          console.log("oldClients: ", oldClients)
+          if (!oldClients) return [];
+          return oldClients.filter((client_) =>
+            client_.instagram_id !== client.instagram_id
+          );
+        });
         setSuccessMessage("Изменения успешно сохранены!");
       } catch (error) {
+        console.error("Ошибка при обновлении папки:", error);
         setErrorMessage("Произошла ошибка при сохранении изменений.");
-        setSelectedFolder(client.folder);
-        console.error("Error saving folder:", error);
       } finally {
         setIsSubmitting(false);
       }

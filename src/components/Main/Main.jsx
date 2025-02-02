@@ -6,7 +6,6 @@ import Clients from "./Components/Clients/Clients";
 
 const Main = memo(
   ({
-    clients,
     onSelectClient,
     folders,
     selectedFolder,
@@ -15,24 +14,21 @@ const Main = memo(
     isUnreadOnly,
     isFoldersError,
     isFoldersLoading,
-    isClientsError,
-    isClientsLoading,
-    scrollPositionRef
   }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-    const filteredClients = useMemo(() => {
-      const folderFiltered = clients.filter(
-        (client) =>
-          !isUnreadOnly || client.lastMessage.sender_id !== "17841470770780990"
-      );
-      if (!searchTerm.trim()) return folderFiltered;
+    // const filteredClients = useMemo(() => {
+    //   const folderFiltered = clients.filter(
+    //     (client) =>
+    //       !isUnreadOnly || client.lastMessage.sender_id !== "17841470770780990"
+    //   );
+    //   if (!searchTerm.trim()) return folderFiltered;
 
-      return folderFiltered.filter((client) =>
-        client.instagram_id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }, [clients, searchTerm, isUnreadOnly]);
+    //   return folderFiltered.filter((client) =>
+    //     client.instagram_id.toLowerCase().includes(searchTerm.toLowerCase())
+    //   );
+    // }, [searchTerm, isUnreadOnly]);
 
     return (
       <div className="chat-list-container">
@@ -58,11 +54,7 @@ const Main = memo(
           folders={folders}
           onSelectClient={onSelectClient}
           isSelectionMode={isSelectionMode}
-          clients={clients}
           selectedFolder={selectedFolder}
-          isClientsLoading={isClientsLoading}
-          filteredClients={filteredClients}
-          scrollPositionRef={scrollPositionRef}
         />
       </div>
     );
