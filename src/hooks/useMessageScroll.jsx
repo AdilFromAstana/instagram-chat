@@ -1,38 +1,46 @@
-import { useCallback, useRef, useEffect } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { fetchDialogueMessages } from "../services/api";
 
-export const useMessageScroll = ({ chatRoomId, myId }) => {
-  const queryClient = useQueryClient();
+export const useMessageScroll = ({ messages, chatRoomId, myId }) => {
+  const queryClient = useQueryClient(); // Доступ к React Query кешу
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const listRef = useRef(null);
-  const prevScrollHeight = useRef(0);
-  const isFirstLoad = useRef(true);
-  const skipScrollHandling = useRef(false);
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isFetching
-  } = useInfiniteQuery({
-    queryKey: ["messages", chatRoomId],
-    queryFn: ({ pageParam = null }) => fetchDialogueMessages(chatRoomId, myId, pageParam),
-    getNextPageParam: (lastPage) => lastPage.length > 0 ? lastPage[0]._id : null,
-    refetchOnWindowFocus: false,
-  });
-
-  const messages = data?.pages.flat() || [];
+  const prevScrollHeight = useRef(0); // Храним высоту перед обновлением данных
+  const isFirstLoad = useRef(true); // Флаг для первой загрузки
+  const skipScrollHandling = useRef(false); // Флаг для пропуска скролла
 
   const handleScroll = useCallback(async () => {
-    if (!hasNextPage || isFetchingNextPage || !listRef.current) return;
+    if (!hasMore || isLoading || !listRef.current || skipScrollHandling.current)
+      return;
 
     prevScrollHeight.current = listRef.current.scrollHeight;
 
     if (listRef.current.scrollTop === 0) {
-      await fetchNextPage();
+      setIsLoading(true);
+      try {
+        const olderMessages = await fetchDialogueMessages(
+          chatRoomId,
+          myId,
+          messages[0]?._id
+        );
+
+        if (olderMessages.length === 0) {
+          setHasMore(false);
+        } else {
+          queryClient.setQueryData(
+            ["messages", chatRoomId],
+            (prevMessages = []) => [...olderMessages, ...prevMessages]
+          );
+        }
+      } catch (error) {
+        console.error("Error loading older messages:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasMore, isLoading, chatRoomId, myId, messages, queryClient]);
 
   useEffect(() => {
     if (listRef.current && isFirstLoad.current && messages.length > 0) {
@@ -42,7 +50,7 @@ export const useMessageScroll = ({ chatRoomId, myId }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (listRef.current && !isFetchingNextPage) {
+    if (listRef.current && !isLoading) {
       const current = listRef.current;
       const previousScrollHeight = prevScrollHeight.current;
       const newScrollHeight = current.scrollHeight;
@@ -53,14 +61,7 @@ export const useMessageScroll = ({ chatRoomId, myId }) => {
         current.scrollTop = scrollOffset;
       }
     }
-  }, [messages, isFetchingNextPage]);
+  }, [messages, isLoading]);
 
-  return {
-    listRef,
-    handleScroll,
-    isFetchingNextPage,
-    hasNextPage,
-    messages, // Возвращаем сообщения, так как они теперь внутри хука
-    isFetching
-  };
+  return { listRef, handleScroll, isLoading, hasMore, skipScrollHandling };
 };

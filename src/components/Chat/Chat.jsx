@@ -6,31 +6,41 @@ import { fetchDialogueMessages, sendMessage } from "../../services/api";
 import ChatHeader from "./Components/ChatHeader/ChatHeader";
 import ChatDrawer from "./Components/ChatDrawer/ChatDrawer";
 import "./Chat.css";
-import socket, { joinRoom } from "../../services/socketClient";
 
-const Chat = React.memo(({ client, setSelectedClient, folders }) => {
+const Chat = React.memo(({ client, onBack, folders }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const myId = "17841470770780990";
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const {
+    data: messages = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["messages", client.instagram_id],
+    queryFn: () => fetchDialogueMessages(myId, client.instagram_id),
+    staleTime: 60 * 1000,
+    cacheTime: 5 * 60 * 1000,
+  });
+
   const markMessagesAsRead = useMutation({
     mutationFn: async () => {
       return Promise.resolve();
     },
     onSuccess: () => {
-      queryClient.setQueryData(["clients", client?.folder], (oldClients) => {
+      queryClient.setQueryData(["clients"], (oldClients) => {
         return oldClients?.map((client_) =>
           client_.instagram_id === client.instagram_id
             ? {
-              ...client_,
-              lastMessage: {
-                ...client_.lastMessage,
-                isRead: true,
-                readAt: Date.now(),
-              },
-            }
+                ...client_,
+                lastMessage: {
+                  ...client_.lastMessage,
+                  isRead: true,
+                  readAt: Date.now(),
+                },
+              }
             : client_
         );
       });
@@ -39,6 +49,7 @@ const Chat = React.memo(({ client, setSelectedClient, folders }) => {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (newMessage) => {
+      console.log("newMessage: ", newMessage);
       return await sendMessage(newMessage);
     },
     onSuccess: (sentMessage) => {
@@ -71,7 +82,7 @@ const Chat = React.memo(({ client, setSelectedClient, folders }) => {
     },
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     markMessagesAsRead.mutate();
   }, []);
 
@@ -99,33 +110,10 @@ const Chat = React.memo(({ client, setSelectedClient, folders }) => {
     }
   }, [successMessage, errorMessage]);
 
-  useEffect(() => {
-    joinRoom(client?.instagram_id)
-
-    const addNewMessage = (newMessage) => {
-      if (newMessage?.sender_id === client?.instagram_id) {
-        queryClient.setQueryData(
-          ["messages", client.instagram_id],
-          (oldMessages = []) => {
-            return oldMessages.some(msg => msg.mid === newMessage.mid)
-              ? oldMessages.map(msg => msg.mid === newMessage.mid ? newMessage : msg)
-              : [...oldMessages, newMessage];
-          }
-        );
-      }
-    }
-
-    socket.on("newMessage", addNewMessage);
-
-    return () => {
-      socket.off("newMessage", addNewMessage);
-    };
-  }, []);
-
   return (
     <div className="chat-view">
       <ChatHeader
-        onBack={() => setSelectedClient(() => null)}
+        onBack={onBack}
         client={client}
         setIsDrawerOpen={setIsDrawerOpen}
       />
@@ -151,8 +139,10 @@ const Chat = React.memo(({ client, setSelectedClient, folders }) => {
       )}
 
       <MessageList
+        messages={messages}
         myId={myId}
         chatRoomId={client.instagram_id}
+        isFirstMessagesLoading={isLoading}
       />
 
       <MessageInput

@@ -1,78 +1,59 @@
 import { useCallback, useState, useRef, useEffect } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { fetchClients } from "../services/api";
-import { io } from "socket.io-client";
 
-export const useClientScroll = ({ selectedFolder }) => {
+export const useClientScroll = ({ clients, selectedFolder }) => {
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const listRef = useRef(null);
   const prevScrollHeight = useRef(0);
   const isFirstLoad = useRef(true);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["clients", selectedFolder],
-    queryFn: ({ pageParam = null }) =>
-      fetchClients({ folder: selectedFolder, lastClientId: pageParam }),
-    getNextPageParam: (lastPage) =>
-      lastPage.length > 0 ? lastPage[lastPage.length - 1].instagram_id : null, // Берём ID последнего клиента
-    refetchOnWindowFocus: false,
-  });
-
-  const allClients = data?.pages.flat() || [];
-
-  useEffect(() => {
-    const socket = io("wss://www.melek-crm.kz", {
-      path: "/socket.io/",
-      transports: ["websocket"],
-    });
-
-    socket.on("new_client", (newClient) => {
-      queryClient.setQueryData(["clients", selectedFolder], (oldData = { pages: [] }) => ({
-        ...oldData,
-        pages: [...oldData.pages, [newClient]], // Добавляем нового клиента в конец списка
-      }));
-    });
-
-    return () => socket.close();
-  }, [queryClient, selectedFolder]);
+  const skipScrollHandling = useRef(false);
 
   const handleScroll = useCallback(async () => {
-    if (!hasNextPage || isFetchingNextPage || !listRef.current) return;
+    if (!hasMore || isLoading || !listRef.current || skipScrollHandling.current)
+      return;
 
     const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
     prevScrollHeight.current = scrollHeight;
 
     if (scrollTop + clientHeight >= scrollHeight - 10) {
       setIsLoading(true);
       try {
-        await fetchNextPage();
+        const newClients = await fetchClients({
+          folder: selectedFolder,
+          lastClientId: clients[clients.length - 1]?.instagram_id,
+        });
+
+        if (newClients.length === 0) {
+          setHasMore(false);
+        } else {
+          queryClient.setQueryData(
+            ["clients", selectedFolder],
+            (prevClients = []) => [...prevClients, ...newClients]
+          );
+        }
       } catch (error) {
-        console.error("Error fetching more clients:", error);
+        console.error("Error loading more clients:", error);
       } finally {
         setIsLoading(false);
       }
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasMore, isLoading, selectedFolder, clients, queryClient]);
 
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = 0;
-    }
-    isFirstLoad.current = true;
+    setHasMore(true);
+    listRef.current.scrollTop = 0;
   }, [selectedFolder]);
 
   useEffect(() => {
-    if (listRef.current && isFirstLoad.current && allClients.length > 0) {
+    if (listRef.current && isFirstLoad.current && clients.length > 0) {
       listRef.current.scrollTop = 0;
       isFirstLoad.current = false;
     }
-  }, [allClients]);
+  }, [clients]);
 
-  return { listRef, handleScroll, isLoading, hasNextPage, allClients };
+  return { listRef, handleScroll, isLoading };
 };
