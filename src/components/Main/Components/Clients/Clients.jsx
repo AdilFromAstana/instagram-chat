@@ -4,6 +4,7 @@ import { useClientScroll } from "../../../../hooks/useClientScroll";
 import { formatTime } from "../../../../services/formatTime";
 import { updateClientsFolder } from "../../../../services/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useScroll } from "../../../../ScrollContext";
 
 const Clients = memo(
   ({
@@ -15,7 +16,6 @@ const Clients = memo(
     selectedFolder,
     isClientsLoading,
     filteredClients,
-    scrollPositionRef,
   }) => {
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
     const [selectedClients, setSelectedClients] = useState([]);
@@ -28,21 +28,31 @@ const Clients = memo(
       clients,
       selectedFolder,
     });
+    const { scrollPosition, setScrollPosition } = useScroll();
 
     useEffect(() => {
       if (listRef.current) {
-        listRef.current.scrollTop = scrollPositionRef.current; // ✅ Восстанавливаем скролл
+        listRef.current.scrollTop = scrollPosition;
       }
-    }, []); // Выполнится при монтировании компонента
+    }, [scrollPosition]);
 
     const onClientSelect = (client) => {
       isSelectionMode ? toggleSelectClient(client) : handleSelectClient(client);
     };
 
-    const handleScrollWithSave = (event) => {
-      scrollPositionRef.current = event.target.scrollTop; // ✅ Запоминаем текущий скролл
-      handleScroll(event); // ✅ Вызываем оригинальный обработчик скролла
-    };
+    const handleScrollWithSave = useCallback(
+      (event) => {
+        const newScrollPosition = event.target.scrollTop;
+
+        if (newScrollPosition !== scrollPosition) {
+          console.log("Сохраняем скролл:", newScrollPosition);
+          setScrollPosition(newScrollPosition);
+        }
+
+        handleScroll(event);
+      },
+      [scrollPosition, handleScroll]
+    );
 
     const toggleSelectClient = useCallback((client) => {
       setSelectedClients((prev) =>

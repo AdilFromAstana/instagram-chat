@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Main from "./components/Main/Main";
 import Chat from "./components/Chat/Chat";
@@ -18,7 +18,6 @@ const App = () => {
   const [isUnreadOnly, setIsUnreadOnly] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const instagramToken = localStorage.getItem("instagramToken");
-  const scrollPositionRef = useRef(0);
 
   const {
     data: clients = [],
@@ -98,7 +97,6 @@ const App = () => {
           isFoldersError={isFoldersError}
           isClientsLoading={isClientsLoading}
           isClientsError={isClientsError}
-          scrollPositionRef={scrollPositionRef}
         />
       )}
     </div>
