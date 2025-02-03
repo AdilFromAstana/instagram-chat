@@ -33,13 +33,18 @@ const MainFolders = memo(
               style={{
                 opacity: isUnreadOnly || isSelectionMode ? (isSelectedFolder ? 1 : 0.5) : 1,
               }}
-              onClick={() => (isUnreadOnly || !isSelectionMode) && setSelectedFolder(folder.code)}
+              onClick={() => {
+                if (isUnreadOnly || isSelectionMode) {
+                  return; // 🚫 Блокируем выбор папки, если хотя бы одно из условий true
+                }
+                setSelectedFolder(folder.code); // ✅ Выбираем папку только если оба false
+              }}
             >
               {folder.title}
             </button>
           );
         })}
-      </div>
+      </div >
     );
   }
 );
