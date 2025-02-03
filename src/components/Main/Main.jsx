@@ -1,4 +1,4 @@
-import React, { memo, useState, useMemo } from "react";
+import React, { memo, useState } from "react";
 import "./Main.css";
 import MainFolders from "./Components/MainFolders/MainFolders";
 import MainHeader from "./Components/MainHeader/MainHeader";
@@ -15,23 +15,21 @@ const Main = memo(
     isUnreadOnly,
     isFoldersError,
     isFoldersLoading,
-    isClientsError,
-    isClientsLoading,
   }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-    const filteredClients = useMemo(() => {
-      const folderFiltered = clients.filter(
-        (client) =>
-          !isUnreadOnly || client.lastMessage.sender_id !== "17841470770780990"
-      );
-      if (!searchTerm.trim()) return folderFiltered;
+    // const filteredClients = useMemo(() => {
+    //   const folderFiltered = clients.filter(
+    //     (client) =>
+    //       !isUnreadOnly || client.lastMessage.sender_id !== "17841470770780990"
+    //   );
+    //   if (!searchTerm.trim()) return folderFiltered;
 
-      return folderFiltered.filter((client) =>
-        client.instagram_id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }, [clients, searchTerm, isUnreadOnly]);
+    //   return folderFiltered.filter((client) =>
+    //     client.instagram_id.toLowerCase().includes(searchTerm.toLowerCase())
+    //   );
+    // }, [clients, searchTerm, isUnreadOnly]);
 
     return (
       <div className="chat-list-container">
@@ -44,6 +42,7 @@ const Main = memo(
           isSelectionMode={isSelectionMode}
         />
         <MainFolders
+          isUnreadOnly={isUnreadOnly}
           isSelectionMode={isSelectionMode}
           isFoldersLoading={isFoldersLoading}
           isFoldersError={isFoldersError}
@@ -53,14 +52,12 @@ const Main = memo(
         />
 
         <Clients
+          isUnreadOnly={isUnreadOnly}
           setIsSelectionMode={setIsSelectionMode}
           folders={folders}
           onSelectClient={onSelectClient}
           isSelectionMode={isSelectionMode}
-          clients={clients}
           selectedFolder={selectedFolder}
-          isClientsLoading={isClientsLoading}
-          filteredClients={filteredClients}
         />
       </div>
     );

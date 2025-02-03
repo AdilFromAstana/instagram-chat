@@ -8,6 +8,7 @@ const MainFolders = memo(
     isFoldersError,
     isFoldersLoading,
     isSelectionMode,
+    isUnreadOnly
   }) => {
     if (isFoldersLoading) {
       return (
@@ -22,7 +23,7 @@ const MainFolders = memo(
     }
     return (
       <div className="folder-scroll">
-        {folders.slice().map((folder) => {
+        {folders.map((folder) => {
           const isSelectedFolder = folder.code === selectedFolder;
           return (
             <button
@@ -30,9 +31,9 @@ const MainFolders = memo(
               className={`folder-button ${isSelectedFolder ? "active" : ""}
               `}
               style={{
-                opacity: isSelectionMode ? (isSelectedFolder ? 1 : 0.5) : 1,
+                opacity: isUnreadOnly || isSelectionMode ? (isSelectedFolder ? 1 : 0.5) : 1,
               }}
-              onClick={() => !isSelectionMode && setSelectedFolder(folder.code)}
+              onClick={() => (isUnreadOnly || !isSelectionMode) && setSelectedFolder(folder.code)}
             >
               {folder.title}
             </button>

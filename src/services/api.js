@@ -29,7 +29,7 @@ export const fetchDialogueMessages = async (
   senderId,
   recipientId,
   lastMessageId = null,
-  limit = 20
+  limit = 100
 ) => {
   const response = await apiClient.get(`/messages/dialogue`, {
     params: {

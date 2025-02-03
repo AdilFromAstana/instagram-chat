@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import EditClientsBottomSheet from "../EditClientsBottomSheet/EditClientsBottomSheet";
 import { useClientScroll } from "../../../../hooks/useClientScroll";
 import { formatTime } from "../../../../services/formatTime";
@@ -12,21 +12,21 @@ const Clients = memo(
     folders,
     onSelectClient,
     isSelectionMode,
-    clients,
     selectedFolder,
     isClientsLoading,
-    filteredClients,
+    isUnreadOnly
   }) => {
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
     const [selectedClients, setSelectedClients] = useState([]);
     const [updateFolder, setUpdateFolder] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
-    const cleintsListRef = useRef();
+    const clientsListRef = useRef();
     const queryClient = useQueryClient();
-    const { listRef, handleScroll, isLoading } = useClientScroll({
-      clients,
+    const { listRef, handleScroll, isLoading, allClients } = useClientScroll({
       selectedFolder,
+      clientsListRef,
+      isUnreadOnly
     });
     const { scrollPosition, setScrollPosition } = useScroll();
 
@@ -34,25 +34,17 @@ const Clients = memo(
       if (listRef.current) {
         listRef.current.scrollTop = scrollPosition;
       }
-    }, [scrollPosition]);
+    }, []);
 
     const onClientSelect = (client) => {
       isSelectionMode ? toggleSelectClient(client) : handleSelectClient(client);
     };
 
-    const handleScrollWithSave = useCallback(
-      (event) => {
-        const newScrollPosition = event.target.scrollTop;
-
-        if (newScrollPosition !== scrollPosition) {
-          console.log("Сохраняем скролл:", newScrollPosition);
-          setScrollPosition(newScrollPosition);
-        }
-
-        handleScroll(event);
-      },
-      [scrollPosition, handleScroll]
-    );
+    const handleScrollWithSave = (event) => {
+      const newScrollPosition = event.target.scrollTop;
+      setScrollPosition(newScrollPosition);
+      handleScroll(event);
+    }
 
     const toggleSelectClient = useCallback((client) => {
       setSelectedClients((prev) =>
@@ -98,6 +90,10 @@ const Clients = memo(
       }
     }, [successMessage, errorMessage]);
 
+    useLayoutEffect(() => {
+      if (!clientsListRef.current) return;
+    }, []);
+
     return (
       <>
         <div
@@ -109,52 +105,57 @@ const Clients = memo(
             <div className="loading-overlay">
               <div className="spinner"></div>
             </div>
-          ) : filteredClients.length === 0 ? (
+          ) : allClients?.length === 0 ? (
             <div className="empty-list">Нет доступных чатов в этой папке.</div>
           ) : (
-            <ul ref={cleintsListRef}>
-              {filteredClients.map((client) => (
-                <li
-                  key={client.instagram_id}
-                  className="chat-item"
-                  onClick={() => onClientSelect(client)}
-                >
-                  {isSelectionMode && (
-                    <input
-                      type="checkbox"
-                      checked={selectedClients.includes(client.instagram_id)}
-                      onChange={() => toggleSelectClient(client)}
-                      className="chat-checkbox"
-                    />
-                  )}
-                  <div className="avatar">
-                    {client.instagram_id[0].toUpperCase()}
-                  </div>
-                  <div className="chat-info">
-                    <div className="chat-name">
-                      {client.name || client.instagram_id}
+            <ul ref={clientsListRef}>
+              {allClients
+                .filter(
+                  (client) => {
+                    return !isUnreadOnly || client.lastMessage.sender_id !== "17841470770780990"
+                  }
+                ).map((client) => (
+                  <li
+                    key={client.instagram_id}
+                    className="chat-item"
+                    onClick={() => onClientSelect(client)}
+                  >
+                    {isSelectionMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedClients.includes(client.instagram_id)}
+                        onChange={() => toggleSelectClient(client)}
+                        className="chat-checkbox"
+                      />
+                    )}
+                    <div className="avatar">
+                      {client.instagram_id[0].toUpperCase()}
                     </div>
-                    <div className="chat-message">
-                      {client.lastMessage
-                        ? client.lastMessage.attachments?.length > 0
-                          ? "Медиа"
-                          : client.lastMessage.content
-                        : "No messages yet"}
+                    <div className="chat-info">
+                      <div className="chat-name">
+                        {client.name || client.instagram_id}
+                      </div>
+                      <div className="chat-message">
+                        {client.lastMessage
+                          ? client.lastMessage.attachments?.length > 0
+                            ? "Медиа"
+                            : client.lastMessage.content
+                          : "No messages yet"}
+                      </div>
+                      <div className="chat-time">
+                        {client.lastMessage
+                          ? formatTime(client.lastMessage.createdAt)
+                          : "N/A"}
+                        {client.tag && (
+                          <span className="chat-tag">{client.tag}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="chat-time">
-                      {client.lastMessage
-                        ? formatTime(client.lastMessage.createdAt)
-                        : "N/A"}
-                      {client.tag && (
-                        <span className="chat-tag">{client.tag}</span>
-                      )}
-                    </div>
-                  </div>
-                  {client.lastMessage && !client.lastMessage.isRead && (
-                    <div className="unread-indicator" title="Не прочитано" />
-                  )}
-                </li>
-              ))}
+                    {client.lastMessage && !client.lastMessage.isRead && (
+                      <div className="unread-indicator" title="Не прочитано" />
+                    )}
+                  </li>
+                ))}
               {isLoading && (
                 <div className="loading-overlay">
                   <div className="spinner" style={{ margin: "10px" }}></div>
@@ -182,9 +183,8 @@ const Clients = memo(
             <span>{selectedClients.length} выбрано</span>
             <div style={{ display: "flex", gap: "10px" }}>
               <button
-                className={`selection-footer-button ${
-                  selectedClients.length === 0 && "disabled"
-                }`}
+                className={`selection-footer-button ${selectedClients.length === 0 && "disabled"
+                  }`}
                 onClick={() =>
                   selectedClients.length > 0 && handleMoveClients()
                 }

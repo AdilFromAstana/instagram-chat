@@ -20,17 +20,6 @@ const App = () => {
   const instagramToken = localStorage.getItem("instagramToken");
 
   const {
-    data: clients = [],
-    isLoading: isClientsLoading,
-    isError: isClientsError,
-  } = useQuery({
-    queryKey: ["clients", selectedFolder],
-    queryFn: () => fetchClientsByFolder(selectedFolder),
-    staleTime: 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
-  });
-
-  const {
     data: fetchedFolders = [],
     isLoading: isFoldersLoading,
     isError: isFoldersError,
@@ -90,13 +79,10 @@ const App = () => {
           isUnreadOnly={isUnreadOnly}
           setSelectedFolder={setSelectedFolder}
           selectedFolder={selectedFolder}
-          clients={clients}
           folders={folders}
           onSelectClient={setSelectedClient}
           isFoldersLoading={isFoldersLoading}
           isFoldersError={isFoldersError}
-          isClientsLoading={isClientsLoading}
-          isClientsError={isClientsError}
         />
       )}
     </div>

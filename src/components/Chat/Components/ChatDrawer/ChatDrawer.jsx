@@ -25,9 +25,16 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
         await updateClientFolder(client.instagram_id, folderCode);
 
         queryClient.setQueryData(["clients", selectedFolder], (oldData) => {
-          if (!oldData) return [];
+          if (!oldData || !oldData.pages) return { pages: [] };
 
-          return oldData.filter((c) => c.instagram_id !== client.instagram_id);
+          return {
+            ...oldData,
+            pages: oldData.pages.map(page =>
+              page.filter((c) =>
+                c.instagram_id !== client.instagram_id
+              )
+            )
+          }
         });
 
         setSuccessMessage("Изменения успешно сохранены!");
@@ -45,6 +52,22 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
     setIsSubmitting(true);
     try {
       await updateClientTag(client.instagram_id, tag);
+
+      queryClient.setQueryData(["clients", client.folder], (oldData) => {
+        if (!oldData || !oldData.pages) return { pages: [] };
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) =>
+            page.map((c) =>
+              c.instagram_id === client.instagram_id
+                ? { ...c, tag }
+                : c
+            )
+          ),
+        };
+      });
+
       setSuccessMessage("Тег успешно изменен!");
     } catch (error) {
       setErrorMessage("Произошла ошибка при сохранении изменений.");
@@ -59,10 +82,26 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
     setIsSubmitting(true);
     try {
       await updateClientNote(client.instagram_id, note);
+
+      queryClient.setQueryData(["clients", client.folder], (oldData) => {
+        if (!oldData || !oldData.pages) return { pages: [] };
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) =>
+            page.map((c) =>
+              c.instagram_id === client.instagram_id
+                ? { ...c, note } // Обновляем тег у нужного клиента
+                : c
+            )
+          ),
+        };
+      });
+
       setSuccessMessage("Заметка успешно изменена!");
     } catch (error) {
       setErrorMessage("Произошла ошибка при сохранении изменений.");
-      setTag(client.tag);
+      setNote(client.note);
       console.error("Error saving tag:", error);
     } finally {
       setIsSubmitting(false);
@@ -112,9 +151,8 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
           {folders.map((folder) => (
             <li
               key={folder.code}
-              className={`folder-item ${
-                folder.code === selectedFolder ? "selected" : ""
-              }`}
+              className={`folder-item ${folder.code === selectedFolder ? "selected" : ""
+                }`}
               disabled={folder.code === selectedFolder}
               onClick={() => handleSubmitFolder(folder.code)}
             >
@@ -158,7 +196,7 @@ const ChatDrawer = ({ isOpen, onClose, folders, client }) => {
           <button
             onClick={handleSubmitNote}
             className="add-tag-button"
-            // disabled={note === client.note}
+          // disabled={note === client.note}
           >
             Добавить
           </button>

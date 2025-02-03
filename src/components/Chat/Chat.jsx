@@ -17,7 +17,6 @@ const Chat = React.memo(({ client, onBack, folders }) => {
   const {
     data: messages = [],
     isLoading,
-    isError,
   } = useQuery({
     queryKey: ["messages", client.instagram_id],
     queryFn: () => fetchDialogueMessages(myId, client.instagram_id),
@@ -30,26 +29,32 @@ const Chat = React.memo(({ client, onBack, folders }) => {
       return Promise.resolve();
     },
     onSuccess: () => {
-      queryClient.setQueryData(["clients"], (oldClients) => {
-        return oldClients?.map((client_) =>
-          client_.instagram_id === client.instagram_id
-            ? {
-                ...client_,
-                lastMessage: {
-                  ...client_.lastMessage,
-                  isRead: true,
-                  readAt: Date.now(),
-                },
-              }
-            : client_
-        );
+      queryClient.setQueryData(["clients", client.folder], (oldData) => {
+        if (!oldData || !oldData.pages) return { pages: [] };
+
+        return {
+          ...oldData,
+          pages: oldData.pages?.map((page) =>
+            page.map(c =>
+              c.instagram_id === client.instagram_id
+                ? {
+                  ...c,
+                  lastMessage: {
+                    ...client.lastMessage,
+                    isRead: true,
+                    readAt: Date.now(),
+                  },
+                }
+                : c
+            )
+          )
+        }
       });
     },
   });
 
   const sendMessageMutation = useMutation({
     mutationFn: async (newMessage) => {
-      console.log("newMessage: ", newMessage);
       return await sendMessage(newMessage);
     },
     onSuccess: (sentMessage) => {
@@ -84,7 +89,7 @@ const Chat = React.memo(({ client, onBack, folders }) => {
 
   React.useEffect(() => {
     markMessagesAsRead.mutate();
-  }, []);
+  }, [client.instagram_id]);
 
   const drawerProps = useMemo(
     () => ({
