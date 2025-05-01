@@ -41,11 +41,13 @@ const App = () => {
     if (!isLoggedIn) return;
 
     const handleClientUpdate = (updatedClient) => {
-      setSelectedClient((prev) =>
-        prev?.instagram_id === updatedClient.instagram_id
-          ? { ...prev, ...updatedClient }
-          : prev
-      );
+      console.log("updatedClient: ", updatedClient);
+      setSelectedClient((prev) => {
+        console.log("prev: ", prev);
+        return prev?.instagram_id === updatedClient.instagram_id
+          ? { ...prev, lastMessage: updatedClient.lastMessage }
+          : prev;
+      });
     };
 
     socket.on("clientUpdate", handleClientUpdate);

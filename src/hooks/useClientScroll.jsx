@@ -3,47 +3,53 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClients } from "../services/api";
 import { io } from "socket.io-client";
 
-export const useClientScroll = ({ selectedFolder, clientsListRef, isUnreadOnly }) => {
+export const useClientScroll = ({
+  selectedFolder,
+  clientsListRef,
+  isUnreadOnly,
+}) => {
   const queryClient = useQueryClient();
   const listRef = useRef(null);
   const lastFetchedClientId = useRef(null);
   const isFirstLoad = useRef(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["clients", selectedFolder], // ❌ Убрали isUnreadOnly из key
-    queryFn: async ({ pageParam = null }) => {
-      return fetchClients({ folder: selectedFolder, lastClientId: pageParam }); // ❌ Убрали isUnreadOnly из запроса
-    },
-    getNextPageParam: (lastPage) => {
-      if (!lastPage || lastPage.length === 0) {
-        return null;
-      }
-      return lastPage[lastPage.length - 1].instagram_id;
-    },
-    refetchOnWindowFocus: false,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["clients", selectedFolder],
+      queryFn: async ({ pageParam = null }) => {
+        return fetchClients({
+          folder: selectedFolder,
+          lastClientId: pageParam,
+        });
+      },
+      getNextPageParam: (lastPage) => {
+        if (!lastPage || lastPage.length === 0) {
+          return null;
+        }
+        return lastPage[lastPage.length - 1].instagram_id;
+      },
+      refetchOnWindowFocus: false,
+    });
 
-  const allClients = (data?.pages.flat() || []).filter(client =>
+  const allClients = (data?.pages.flat() || []).filter((client) =>
     isUnreadOnly ? !client.isRead : true
   );
 
   useEffect(() => {
-    const socket = io("wss://www.melek-crm.kz", {
+    const socket = io("ws://192.168.0.10:4000", {
       path: "/socket.io/",
       transports: ["websocket"],
     });
 
     socket.on("new_client", (newClient) => {
-      queryClient.setQueryData(["clients", selectedFolder], (oldData = { pages: [] }) => ({
-        ...oldData,
-        pages: [[newClient], ...oldData.pages],
-      }));
+      queryClient.setQueryData(
+        ["clients", selectedFolder],
+        (oldData = { pages: [] }) => ({
+          ...oldData,
+          pages: [[newClient], ...oldData.pages],
+        })
+      );
     });
 
     return () => socket.close();
@@ -65,7 +71,6 @@ export const useClientScroll = ({ selectedFolder, clientsListRef, isUnreadOnly }
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-
   useEffect(() => {
     if (!clientsListRef?.current || !isUnreadOnly) return;
 
@@ -77,7 +82,10 @@ export const useClientScroll = ({ selectedFolder, clientsListRef, isUnreadOnly }
         const { scrollHeight } = ulElement;
         const { clientHeight } = listRef.current || {};
 
-        const queryState = queryClient.getQueryState(["clients", selectedFolder]);
+        const queryState = queryClient.getQueryState([
+          "clients",
+          selectedFolder,
+        ]);
         const realHasNextPage = queryState?.data?.pages?.length
           ? queryState.data.pages[queryState.data.pages.length - 1]?.length > 0
           : false;
@@ -89,7 +97,10 @@ export const useClientScroll = ({ selectedFolder, clientsListRef, isUnreadOnly }
           return;
         }
 
-        const lastClientId = allClients.length > 0 ? allClients[allClients.length - 1].instagram_id : null;
+        const lastClientId =
+          allClients.length > 0
+            ? allClients[allClients.length - 1].instagram_id
+            : null;
 
         lastFetchedClientId.current = lastClientId;
         setIsLoading(true);

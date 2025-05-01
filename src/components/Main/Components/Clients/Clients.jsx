@@ -112,7 +112,7 @@ const Clients = memo(
               {allClients
                 .filter(
                   (client) => {
-                    return !isUnreadOnly || client.lastMessage.sender_id !== "17841470770780990"
+                    return !isUnreadOnly || client.lastMessage.sender_id !== "17841455517290911"
                   }
                 ).map((client) => (
                   <li

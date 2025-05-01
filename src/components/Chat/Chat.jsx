@@ -9,7 +9,7 @@ import "./Chat.css";
 
 const Chat = React.memo(({ client, onBack, folders }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const myId = "17841470770780990";
+  const myId = "17841455517290911";
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -67,8 +67,8 @@ const Chat = React.memo(({ client, onBack, folders }) => {
         content: sentMessage.result.content,
         _id: sentMessage.result.message_id,
         mid: sentMessage.result.message_id,
-        senderId: "17841470770780990",
-        sender_id: "17841470770780990",
+        senderId: "17841455517290911",
+        sender_id: "17841455517290911",
         recipient_id: sentMessage.result.recipient_id,
         recipientId: sentMessage.result.recipient_id,
         createdAt: isoDate,

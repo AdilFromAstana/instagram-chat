@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("wss://www.melek-crm.kz", {
+const socket = io("ws://192.168.0.10:4000", {
   path: "/socket.io/",
   transports: ["websocket"],
 });

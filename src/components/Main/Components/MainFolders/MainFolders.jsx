@@ -35,9 +35,9 @@ const MainFolders = memo(
               }}
               onClick={() => {
                 if (isUnreadOnly || isSelectionMode) {
-                  return; // 🚫 Блокируем выбор папки, если хотя бы одно из условий true
+                  return;
                 }
-                setSelectedFolder(folder.code); // ✅ Выбираем папку только если оба false
+                setSelectedFolder(folder.code);
               }}
             >
               {folder.title}

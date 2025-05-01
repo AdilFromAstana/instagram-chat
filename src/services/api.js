@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://www.melek-crm.kz/api";
-// const API_BASE_URL = "http://192.168.0.12:5000/api";
+// const API_BASE_URL = "https://www.melek-crm.kz/api";
+const API_BASE_URL = "http://192.168.0.10:5000/api";
 // const API_BASE_URL = "http://172.20.10.7:5000/api";
 
 const apiClient = axios.create({
@@ -11,7 +11,8 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem("accessToken");
-    const instagramToken = localStorage.getItem("instagramToken");
+    const instagramToken = localStorage.getItem("instagramToken") || "IGAAITV7EZAGsJBZAE9vX3AzMlo5d2pfU2UxbjdleEgtTU0xTk1LdDVHUEt4eG1BaFRITFo2ZAFNEUThSX2pOQWw5MkRTQ3hjdFJpU3ZAob1dIU0NwcHc3eWpoZAEZALQ3EyWTJtcERrUFJEQXF5YW1DLU5XRk5B";
+    console.log(instagramToken)
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
